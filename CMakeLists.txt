@@ -1,33 +1,31 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(libmavconn)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+############
+## Config ##
+############
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag("-std=c++14" COMPILER_SUPPORTS_STD_CXX14)
+if (NOT COMPILER_SUPPORTS_STD_CXX14)
+  check_cxx_compiler_flag("-std=c++11" COMPILER_SUPPORTS_STD_CXX11)
+endif ()
 
-## System dependencies are found with CMake's conventions
+if (COMPILER_SUPPORTS_STD_CXX14)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+elseif (COMPILER_SUPPORTS_STD_CXX11)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+else ()
+  message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+endif ()
+
+## Put all binary files into /bin and libraries into /lib
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
+set(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+## Find libraries
 find_package(console_bridge REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system)
-
-# add package modules path, not needed in dependend packages
-list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
-include(EnableCXX11)
-include(MavrosMavlink)
-
-# Fixed in mavlink 2016.7.7
-#-> enum values out of int range
-#list(APPEND IGNORE_DIALECTS "autoquad")
-
-###################################
-## catkin specific configuration ##
-###################################
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES mavconn
-  DEPENDS Boost mavlink console_bridge
-  CFG_EXTRAS libmavconn-extras.cmake
-)
 
 ###########
 ## Build ##
@@ -35,9 +33,7 @@ catkin_package(
 
 include_directories(
   include
-  include/mavlink/c_library_v2
   ${Boost_INCLUDE_DIRS}
-  ${mavlink_INCLUDE_DIRS}
   ${console_bridge_INCLUDE_DIRS}
 )
 
@@ -54,51 +50,7 @@ target_link_libraries(mavconn
   ${console_bridge_LIBRARIES}
 )
 
-# Use catkin-supplied em_expand macros to generate source files
-em_expand(${CMAKE_CURRENT_SOURCE_DIR}/mavlink.context.py.in
-  ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/mavlink.context.py
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/mavconn/mavlink_dialect.h.em
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/mavconn/mavlink_dialect.h)
-
-em_expand(${CMAKE_CURRENT_SOURCE_DIR}/mavlink.context.py.in
-  ${CMAKE_CURRENT_BINARY_DIR}/catkin_generated/mavlink.context.py
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/mavlink_helpers.cpp.em
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/mavlink_helpers.cpp)
-
 #############
 ## Install ##
 #############
-
-# all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
-
-## Mark executables and/or libraries for installation
-install(TARGETS mavconn
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-## Mark cpp header files for installation
-install(DIRECTORY include/mavconn/
-  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}/mavconn
-  FILES_MATCHING PATTERN "*.h"
-)
-
-## Install cmake files (thanks to cmake_modules package)
-install(DIRECTORY cmake/Modules
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/cmake
-)
-
-#############
-## Testing ##
-#############
-
-if(CATKIN_ENABLE_TESTING)
-
-catkin_add_gtest(mavconn-test test/test_mavconn.cpp)
-target_link_libraries(mavconn-test mavconn)
-
-endif()
-
-# vim: ts=2 sw=2 et:
+# TO BE ADDED

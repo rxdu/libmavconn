@@ -2,6 +2,12 @@
 Changelog for package libmavconn
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.18.4-CMake (2016-11-11)
+-------------------------
+* Removed all ROS and catkin related configurations
+* Generated mavlink headers and included in this project
+* Contributors: Ruixiang Du
+
 0.18.4 (2016-11-11)
 -------------------
 * Update README for all packages
